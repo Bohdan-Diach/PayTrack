@@ -2,18 +2,14 @@
 let transactions = JSON.parse(localStorage.getItem('fb_bento_data')) || [];
 let userGoal = JSON.parse(localStorage.getItem('fb_goal_data')) || null;
 let userLimits = JSON.parse(localStorage.getItem('fb_limits_data')) || {};
-// Додали підтримку валюти та теми
 let userProfile = JSON.parse(localStorage.getItem('fb_user_profile')) || { name: 'Користувач', email: 'finance@buddy.ua', currency: '₴', theme: 'light' };
 
 const CURRENCY = userProfile.currency || '₴';
 let currentChart = null; 
 
-// Застосовуємо темну тему одразу при завантаженні скрипта
-if (userProfile.theme === 'dark') {
-    document.documentElement.classList.add('dark');
-} else {
-    document.documentElement.classList.remove('dark');
-}
+// Застосовуємо тему
+if (userProfile.theme === 'dark') document.documentElement.classList.add('dark');
+else document.documentElement.classList.remove('dark');
 
 // ================= КАТЕГОРІЇ =================
 const categoryConfig = {
@@ -37,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateMobileNavigation();
     updateDesktopNavigation();
     
-    // Оновлюємо плейсхолдери у формах під нову валюту
     const amountInputs = document.querySelectorAll('input[placeholder^="Сума"]');
     amountInputs.forEach(input => input.placeholder = `Сума (${CURRENCY})`);
 
@@ -49,43 +44,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function updateDesktopNavigation() {
-    const path = window.location.pathname;
-    const page = path.split("/").pop() || "index.html"; 
+    const page = window.location.pathname.split("/").pop() || "index.html"; 
     const desktopNav = document.querySelector('aside.sidebar nav');
     if (!desktopNav) return;
-    const links = desktopNav.querySelectorAll('a');
-    links.forEach(link => {
-        if (link.getAttribute('href') === page) {
-            link.className = "flex items-center gap-4 bg-green-brand text-white px-5 py-3 rounded-2xl font-medium shadow-lg";
-        } else {
-            link.className = "flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors dark:hover:bg-slate-800";
-        }
+    desktopNav.querySelectorAll('a').forEach(link => {
+        if (link.getAttribute('href') === page) link.className = "flex items-center gap-4 bg-green-brand text-white px-5 py-3 rounded-2xl font-medium shadow-lg";
+        else link.className = "flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors";
     });
 }
 
 function updateMobileNavigation() {
-    const path = window.location.pathname;
-    const page = path.split("/").pop() || "index.html"; 
+    const page = window.location.pathname.split("/").pop() || "index.html"; 
     const mobileNav = document.querySelector('nav.fixed.bottom-0');
     if (!mobileNav) return;
-    const links = mobileNav.querySelectorAll('a');
-    links.forEach(link => {
-        if (link.getAttribute('href') === page) {
-            link.className = "flex flex-col items-center p-2 text-emerald-600";
-        } else {
-            link.className = "flex flex-col items-center p-2 text-slate-400 hover:text-emerald-500 transition-colors";
-        }
+    mobileNav.querySelectorAll('a').forEach(link => {
+        if (link.getAttribute('href') === page) link.className = "flex flex-col items-center p-2 text-emerald-600";
+        else link.className = "flex flex-col items-center p-2 text-slate-400 hover:text-emerald-500 transition-colors";
     });
 }
 
 function updateSidebarProfile() {
-    const nameEls = document.querySelectorAll('.sidebar .font-bold.text-sm');
-    nameEls.forEach(el => {
+    document.querySelectorAll('.sidebar .font-bold.text-sm').forEach(el => {
         if(el.textContent === 'Користувач' || el.textContent.includes('@') === false) el.textContent = userProfile.name;
     });
 }
 
-// ================= 1. ГОЛОВНА =================
+// ================= ГОЛОВНА =================
 function initDashboard() {
     updateDashboardUI();
     document.getElementById('transaction-form').addEventListener('submit', function(e) {
@@ -94,20 +78,16 @@ function initDashboard() {
         const amount = parseFloat(document.getElementById('t-amount').value);
         const category = document.getElementById('t-category').value;
         const type = category === 'income' ? 'income' : 'expense';
-
+        
         if (!name.trim()) name = categoryConfig[category].name;
+        
         const now = new Date();
         transactions.unshift({
-            id: Date.now(), 
-            name: name, 
-            amount: amount, 
-            category: category, 
-            type: type,
+            id: Date.now(), name, amount, category, type,
             date: `${now.toLocaleDateString('uk-UA', { day: '2-digit', month: 'short' })} о ${now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}` 
         });
         localStorage.setItem('fb_bento_data', JSON.stringify(transactions));
-        document.getElementById('t-name').value = ''; 
-        document.getElementById('t-amount').value = '';
+        document.getElementById('t-name').value = ''; document.getElementById('t-amount').value = '';
         updateDashboardUI();
     });
 
@@ -125,8 +105,7 @@ function initDashboard() {
                 setTimeout(() => {
                     document.getElementById('goal-modal-form').classList.remove('hidden');
                     document.getElementById('modal-success').classList.add('hidden');
-                    document.getElementById('modal-g-name').value = ''; 
-                    document.getElementById('modal-g-amount').value = '';
+                    document.getElementById('modal-g-name').value = ''; document.getElementById('modal-g-amount').value = '';
                 }, 300);
             }, 3000);
         });
@@ -140,28 +119,22 @@ function updateDashboardUI() {
     let income = 0; let expense = 0;
     const list = document.getElementById('transactions-list');
     if(list) list.innerHTML = '';
-    
-    transactions.forEach(t => { 
-        if (t.type === 'income') income += t.amount; 
-        else expense += t.amount; 
-    });
+    transactions.forEach(t => { if (t.type === 'income') income += t.amount; else expense += t.amount; });
 
     if(list) {
-        const recentTransactions = transactions.slice(0, 3);
-        if (recentTransactions.length === 0) {
-            list.innerHTML = '<div class="text-slate-400 text-sm py-4">Немає операцій</div>';
-        } else {
-            recentTransactions.forEach(t => {
+        const recent = transactions.slice(0, 3);
+        if (recent.length === 0) list.innerHTML = '<div class="text-slate-400 text-sm py-4">Немає операцій</div>';
+        else {
+            recent.forEach(t => {
                 const conf = categoryConfig[t.category];
                 const sign = t.type === 'income' ? '+' : '-';
                 const amountColor = t.type === 'income' ? 'text-emerald-600' : 'text-slate-800';
-                
                 list.innerHTML += `
-                    <div class="flex justify-between items-center p-2 rounded-xl bg-slate-50 dark:bg-slate-700 mb-2">
+                    <div class="flex justify-between items-center p-2 rounded-xl bg-slate-50 mb-2">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center ${conf.bg} ${conf.color} text-xs"><i class="fas ${conf.icon}"></i></div>
                             <div>
-                                <div class="font-bold text-sm text-slate-800 dark:text-white truncate w-24">${t.name}</div>
+                                <div class="font-bold text-sm text-slate-800 truncate w-24">${t.name}</div>
                                 <div class="text-[10px] text-slate-400">${t.date}</div>
                             </div>
                         </div>
@@ -170,16 +143,12 @@ function updateDashboardUI() {
             });
         }
     }
-
-    const balance = income - expense;
-    if(document.getElementById('total-balance')) {
-        document.getElementById('total-balance').textContent = `${CURRENCY}${balance >= 0 ? formatMoney(balance) : '0'}`;
-    }
+    if(document.getElementById('total-balance')) document.getElementById('total-balance').textContent = `${CURRENCY}${formatMoney(income - expense)}`;
     
     const ring = document.getElementById('balance-ring');
     const percentText = document.getElementById('balance-percent');
     if (ring && percentText) {
-        let percent = income > 0 ? Math.max(0, Math.round((balance / income) * 100)) : 0;
+        let percent = income > 0 ? Math.max(0, Math.round(((income - expense) / income) * 100)) : 0;
         ring.style.strokeDashoffset = 251.2 - (percent / 100) * 251.2;
         percentText.textContent = `${percent}%`;
     }
@@ -188,17 +157,17 @@ function updateDashboardUI() {
     if (goalBox) {
         if (!userGoal) goalBox.innerHTML = `<div class="text-center opacity-50"><i class="fas fa-crosshairs text-3xl mb-2"></i><p class="text-sm font-medium">Ціль не встановлено</p></div>`;
         else {
-            const saved = balance > 0 ? balance : 0;
+            const saved = (income - expense) > 0 ? (income - expense) : 0;
             let goalPercent = Math.min((saved / userGoal.amount) * 100, 100);
             goalBox.innerHTML = `
                 <div>
                     <p class="text-sm text-slate-400 mb-1">Збираємо на:</p>
-                    <h4 class="font-bold text-xl text-slate-800 dark:text-white truncate">${userGoal.name}</h4>
+                    <h4 class="font-bold text-xl text-slate-800 truncate">${userGoal.name}</h4>
                     <div class="flex justify-between items-end mt-4 mb-2">
                         <span class="text-emerald-500 font-bold text-lg">${Math.floor(goalPercent)}%</span>
                         <span class="text-sm text-slate-400">з ${CURRENCY}${formatMoney(userGoal.amount)}</span>
                     </div>
-                    <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                    <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
                         <div class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-full rounded-full" style="width: ${goalPercent}%"></div>
                     </div>
                 </div>`;
@@ -206,7 +175,7 @@ function updateDashboardUI() {
     }
 }
 
-// ================= 2. СТАТИСТИКА =================
+// ================= СТАТИСТИКА =================
 function initStatistics() {
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
@@ -273,7 +242,7 @@ function generateSmartAdvice(expenses, total) {
     adviceEl.innerHTML = advice + (tips[maxCat] || "Продовжуйте стежити за своїми витратами! 🌟");
 }
 
-// ================= 3. ІСТОРІЯ =================
+// ================= ІСТОРІЯ =================
 function initHistory() {
     const searchInput = document.getElementById('search-input');
     const typeButtons = document.querySelectorAll('.type-filter');
@@ -325,7 +294,7 @@ function initHistory() {
 
 function deleteTransaction(id) { transactions = transactions.filter(t => t.id !== id); localStorage.setItem('fb_bento_data', JSON.stringify(transactions)); if(document.getElementById('full-history-list')) initHistory(); if(document.getElementById('transaction-form')) updateDashboardUI(); }
 
-// ================= 4. ЛІМІТИ =================
+// ================= ЛІМІТИ =================
 function initLimits() {
     const form = document.getElementById('limit-form');
     if(form) {
@@ -374,7 +343,7 @@ function renderLimits() {
 }
 function deleteLimit(category) { delete userLimits[category]; localStorage.setItem('fb_limits_data', JSON.stringify(userLimits)); renderLimits(); }
 
-// ================= 5. НАЛАШТУВАННЯ =================
+// ================= НАЛАШТУВАННЯ =================
 function initSettings() {
     // ПРОФІЛЬ
     document.getElementById('user-name-input').value = userProfile.name;
