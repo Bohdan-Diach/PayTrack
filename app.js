@@ -25,12 +25,37 @@ function formatMoney(amount) { return Math.floor(amount).toLocaleString('uk-UA')
 document.addEventListener('DOMContentLoaded', () => {
     updateSidebarProfile();
     updateMobileNavigation();
+    updateDesktopNavigation();
     if (document.getElementById('transaction-form')) initDashboard();
     if (document.getElementById('analyticsChart')) initStatistics();
     if (document.getElementById('full-history-list')) initHistory();
     if (document.getElementById('limits-list')) initLimits();
     if (document.getElementById('profile-form')) initSettings();
 });
+
+// Функція автоматичного підсвічування бокового меню (ПК)
+function updateDesktopNavigation() {
+    const path = window.location.pathname;
+    const page = path.split("/").pop() || "index.html"; 
+    
+    // Знаходимо навігацію в боковому меню
+    const desktopNav = document.querySelector('aside.sidebar nav');
+    if (!desktopNav) return;
+
+    // Перебираємо всі посилання
+    const links = desktopNav.querySelectorAll('a');
+    links.forEach(link => {
+        const href = link.getAttribute('href');
+        
+        if (href === page) {
+            // АКТИВНА кнопка (Темно-зелена)
+            link.className = "flex items-center gap-4 bg-green-brand text-white px-5 py-3 rounded-2xl font-medium shadow-lg";
+        } else {
+            // НЕАКТИВНА кнопка (Сіра, прозора)
+            link.className = "flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors";
+        }
+    });
+}
 
 // Функція автоматичного підсвічування мобільного меню
 function updateMobileNavigation() {
