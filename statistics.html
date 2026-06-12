@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanceBuddy | Статистика</title>
+    <title>UPFinance | Статистика</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -25,11 +25,9 @@
             <div class="mb-12">
                 <h1 class="text-2xl font-bold text-slate-800 mb-8"><i class="fas fa-wallet text-emerald-600 mr-2"></i>UPFinance</h1>
             </div>
-           <nav class="space-y-2">
+            <nav class="space-y-2">
                 <a href="index.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-home w-5 text-center"></i> Головна</a>
-                
                 <a href="statistics.html" class="flex items-center gap-4 bg-green-brand text-white px-5 py-3 rounded-2xl font-medium shadow-lg"><i class="fas fa-chart-pie w-5 text-center"></i> Статистика</a>
-                
                 <a href="history.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-list w-5 text-center"></i> Історія</a>
                 <a href="limits.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-shield-alt w-5 text-center"></i> Ліміти</a>
                 <a href="settings.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-cog w-5 text-center"></i> Налаштування</a>
@@ -59,10 +57,23 @@
                 </div>
             </div>
             
+            <!-- Контейнер для графіка -->
             <div class="flex-1 relative w-full flex items-center justify-center z-10">
                 <canvas id="analyticsChart"></canvas>
+                
+                <!-- КРАСИВА ПІДКАЗКА (ховається через JS) -->
+                <div id="empty-state-hint" class="absolute inset-0 flex flex-col items-center justify-center text-center z-20 pointer-events-none hidden">
+                    <div class="bg-slate-900/60 backdrop-blur-md px-6 py-5 rounded-3xl border border-white/10 shadow-2xl transform transition-all duration-500">
+                        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-magic text-3xl text-emerald-400"></i>
+                        </div>
+                        <h4 class="text-white font-bold text-xl">Тут поки порожньо</h4>
+                        <p class="text-slate-300 text-sm mt-2 leading-relaxed">Додайте першу витрату на Головній сторінці,<br>щоб побачити магію аналітики ✨</p>
+                    </div>
+                </div>
             </div>
             
+            <!-- Фоновий декор -->
             <div class="absolute -bottom-20 -right-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         </div>
     </main>
