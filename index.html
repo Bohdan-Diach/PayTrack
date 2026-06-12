@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanceBuddy | Головна</title>
+    <title>UPFinance | Головна</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,25 +14,20 @@
         .bg-orange-brand { background-color: #ff5722; }
         .bg-green-brand { background-color: #1a2e24; }
         .progress-ring__circle { transition: stroke-dashoffset 0.8s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        /* Анімація для модального вікна */
+        .modal-enter { animation: modalIn 0.3s ease-out forwards; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="flex min-h-screen text-slate-800 p-2 md:p-6 gap-6">
 
-    <!-- Sidebar з РОБОЧИМИ посиланнями -->
     <aside class="sidebar w-64 p-8 hidden lg:flex flex-col justify-between shadow-xl">
         <div>
             <div class="mb-12">
                 <h1 class="text-2xl font-bold text-slate-800 mb-8"><i class="fas fa-wallet text-emerald-600 mr-2"></i>UPFinance</h1>
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xl">US</div>
-                    <div>
-                        <div class="font-bold text-sm">Користувач</div>
-                    </div>
-                </div>
             </div>
             <nav class="space-y-2">
                 <a href="index.html" class="flex items-center gap-4 bg-green-brand text-white px-5 py-3 rounded-2xl font-medium shadow-lg"><i class="fas fa-home w-5 text-center"></i> Головна</a>
-                
                 <a href="statistics.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-chart-pie w-5 text-center"></i> Статистика</a>
                 <a href="history.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-list w-5 text-center"></i> Історія</a>
                 <a href="limits.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-shield-alt w-5 text-center"></i> Ліміти</a>
@@ -44,43 +39,84 @@
     <main class="flex-1 max-w-6xl mx-auto w-full flex flex-col gap-6">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
             
-            <!-- Доступні кошти -->
-            <div class="bento-card md:col-span-6 bg-orange-brand p-8 text-white flex flex-col justify-between items-center relative">
-                <div class="w-full flex justify-between mb-4"><p class="text-sm">Доступно цього місяця</p></div>
-                <h2 class="text-5xl font-bold mb-8 w-full text-left" id="total-balance">₴0</h2>
-                <div class="relative w-32 h-32 flex items-center justify-center">
+            <div class="bento-card md:col-span-4 bg-orange-brand p-6 text-white flex flex-col justify-between items-center relative">
+                <div class="w-full flex justify-between mb-2"><p class="text-sm font-medium">Доступно</p></div>
+                <h2 class="text-4xl font-bold mb-4 w-full text-left" id="total-balance">₴0</h2>
+                <div class="relative w-28 h-28 flex items-center justify-center">
                     <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
                         <circle class="text-white/20 stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"></circle>
                         <circle id="balance-ring" class="text-white progress-ring__circle stroke-current" stroke-width="8" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
                     </svg>
-                    <span id="balance-percent" class="absolute text-2xl font-bold">0%</span>
+                    <span id="balance-percent" class="absolute text-xl font-bold">0%</span>
                 </div>
             </div>
 
-            <!-- Останні операції -->
-            <div class="bento-card md:col-span-6 bg-white p-6 flex flex-col">
-                <h3 class="font-bold text-lg mb-6">Останні операції</h3>
-                <div id="transactions-list" class="flex-1 space-y-2"></div>
+            <div class="bento-card md:col-span-4 bg-white p-6 flex flex-col justify-between relative group">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg text-slate-800">Скарбничка</h3>
+                    <button onclick="openGoalModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 flex items-center justify-center transition-all"><i class="fas fa-pen text-sm"></i></button>
+                </div>
+                
+                <div id="goal-ui-content" class="flex-1 flex flex-col justify-center">
+                    </div>
             </div>
 
-            <!-- Форма -->
+            <div class="bento-card md:col-span-4 bg-white p-6 flex flex-col">
+                <h3 class="font-bold text-lg mb-4 text-slate-800">Останні операції</h3>
+                <div id="transactions-list" class="flex-1 space-y-2 overflow-hidden"></div>
+            </div>
+
             <div class="bento-card md:col-span-12 bg-white p-8">
-                <h3 class="font-bold text-lg mb-6">Додати нову транзакцію</h3>
-                <form id="transaction-form" class="flex gap-4">
-                    <!-- Поле назви тепер НЕ має атрибута required -->
-                    <input type="text" id="t-name" placeholder="Назва (необов'язково)" class="flex-1 bg-slate-50 py-4 px-4 rounded-2xl">
-                    <input type="number" id="t-amount" placeholder="Сума" required class="w-40 bg-slate-50 py-4 px-4 rounded-2xl">
-                    <select id="t-category" class="w-48 bg-slate-50 py-4 px-4 rounded-2xl">
+                <h3 class="font-bold text-lg mb-6 text-slate-800">Додати нову транзакцію</h3>
+                <form id="transaction-form" class="flex flex-col md:flex-row gap-4">
+                    <input type="text" id="t-name" placeholder="Назва (необов'язково)" class="flex-1 bg-slate-50 py-4 px-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium">
+                    <input type="number" id="t-amount" placeholder="Сума (₴)" required class="w-full md:w-40 bg-slate-50 py-4 px-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium">
+                    <select id="t-category" class="w-full md:w-48 bg-slate-50 py-4 px-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium cursor-pointer">
                         <option value="income">💰 Дохід</option>
                         <option value="products" selected>🛒 Продукти</option>
                         <option value="transport">🚗 Транспорт</option>
+                        <option value="entertainment">🎬 Розваги</option>
                     </select>
-                    <button type="submit" class="bg-slate-800 text-white px-8 rounded-2xl">Додати</button>
+                    <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg active:scale-95 whitespace-nowrap">Додати</button>
                 </form>
             </div>
 
         </div>
     </main>
+
+    <div id="goal-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div id="goal-modal-card" class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative mx-4">
+            <button onclick="closeGoalModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-800 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 rotate-3">
+                    <i class="fas fa-car-side"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800">Твоя нова ціль</h3>
+                <p class="text-slate-500 text-sm mt-1">Встанови мету, і ми допоможемо її досягти!</p>
+            </div>
+            
+            <form id="goal-modal-form" class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">На що збираємо?</label>
+                    <input type="text" id="modal-g-name" placeholder="напр. Ford Fusion" class="w-full bg-slate-50 py-4 px-5 rounded-2xl mt-1 outline-none focus:ring-2 focus:ring-emerald-500 font-medium" required>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">Яка сума потрібна?</label>
+                    <input type="number" id="modal-g-amount" placeholder="Сума (₴)" class="w-full bg-slate-50 py-4 px-5 rounded-2xl mt-1 outline-none focus:ring-2 focus:ring-emerald-500 font-medium" required>
+                </div>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-emerald-500/30 mt-2">Зберегти ціль</button>
+            </form>
+
+            <div id="modal-success" class="hidden text-center py-6">
+                <div class="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-4 animate-bounce">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h4 class="text-xl font-bold text-slate-800 mb-2">Збережено!</h4>
+                <p id="modal-motivation-text" class="text-emerald-600 font-medium text-lg leading-snug"></p>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
