@@ -15,6 +15,7 @@
     </style>
 </head>
 <body class="flex min-h-screen text-slate-800 p-2 md:p-6 gap-6 pb-24 md:pb-6">
+
     <aside class="sidebar w-64 p-8 hidden lg:flex flex-col justify-between shadow-xl">
         <div>
             <div class="mb-12">
@@ -36,19 +37,18 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <div class="bento-card bg-white p-8">
-    <h3 class="font-bold text-lg mb-6 text-slate-800"><i class="fas fa-user-circle text-emerald-500 mr-2"></i> Профіль</h3>
-    <form id="profile-form" class="space-y-4">
-        <div>
-            <label class="text-sm font-medium text-slate-500">Ім'я користувача</label>
-            <input type="text" id="user-name-input" placeholder="Введіть ім'я" class="w-full bg-slate-50 py-3 px-4 rounded-xl mt-1 outline-none focus:ring-2 focus:ring-emerald-500 font-medium" required>
-        </div>
-        <div>
-            <label class="text-sm font-medium text-slate-500">Email</label>
-            <input type="email" id="user-email-input" placeholder="Введіть email" class="w-full bg-slate-50 py-3 px-4 rounded-xl mt-1 outline-none focus:ring-2 focus:ring-emerald-500 font-medium" required>
-        </div>
-        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl mt-4 transition-all shadow-lg shadow-emerald-500/30">Зберегти зміни</button>
-    </form>
-</div>
+                <h3 class="font-bold text-lg mb-6 text-slate-800"><i class="fas fa-user-circle text-emerald-500 mr-2"></i> Профіль</h3>
+                <form id="profile-form" class="space-y-4">
+                    <div>
+                        <label class="text-sm font-medium text-slate-500">Ім'я користувача</label>
+                        <input type="text" id="user-name-input" placeholder="Введіть ім'я" class="w-full bg-slate-50 py-3 px-4 rounded-xl mt-1 outline-none focus:ring-2 focus:ring-emerald-500 font-medium" required>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-500">Email</label>
+                        <input type="email" id="user-email-input" placeholder="Введіть email" class="w-full bg-slate-50 py-3 px-4 rounded-xl mt-1 outline-none focus:ring-2 focus:ring-emerald-500 font-medium" required>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl mt-4 transition-all shadow-lg shadow-emerald-500/30">Зберегти зміни</button>
+                </form>
             </div>
 
             <div class="bento-card bg-rose-50 border border-rose-100 p-8">
@@ -63,8 +63,8 @@
         </div>
     </main>
 
-<nav class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 flex justify-around items-center py-2 pb-safe lg:hidden z-50 shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.05)]">
-        <a href="index.html" class="flex flex-col items-center p-2 text-emerald-600">
+    <nav class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 flex justify-around items-center py-2 pb-safe lg:hidden z-50 shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.05)]">
+        <a href="index.html" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-500 transition-colors">
             <i class="fas fa-home text-xl mb-1"></i>
             <span class="text-[10px] font-medium">Головна</span>
         </a>
@@ -80,12 +80,12 @@
             <i class="fas fa-shield-alt text-xl mb-1"></i>
             <span class="text-[10px] font-medium">Ліміти</span>
         </a>
-        <a href="settings.html" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-500 transition-colors">
+        <a href="settings.html" class="flex flex-col items-center p-2 text-emerald-600">
             <i class="fas fa-cog text-xl mb-1"></i>
             <span class="text-[10px] font-medium">Профіль</span>
         </a>
     </nav>
-    
+
     <script src="app.js"></script>
 </body>
 </html>
