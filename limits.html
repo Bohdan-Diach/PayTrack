@@ -16,27 +16,32 @@
 </head>
 <body class="flex min-h-screen text-slate-800 p-2 md:p-6 gap-6 pb-24 md:pb-6">
 
-    <aside class="sidebar w-64 p-8 hidden lg:flex flex-col justify-between shadow-xl">
+<aside class="sidebar w-64 p-8 hidden lg:flex flex-col justify-between shadow-xl">
         <div>
             <div class="mb-12">
-                <h1 class="text-2xl font-bold text-slate-800 mb-8"><i class="fas fa-wallet text-emerald-600 mr-2"></i>UPFinance</h1>
+                <h1 class="text-4xl font-extrabold text-slate-900 tracking-tighter"><i class="fas fa-credit-card text-emerald-500 mr-2"></i>PayTrack<span class="text-emerald-500">.</span></h1>
             </div>
             <nav class="space-y-2">
-                <a href="index.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-home w-5 text-center"></i> Головна</a>
+                <a href="index.html" class="flex items-center gap-4 bg-green-brand text-white px-5 py-3 rounded-2xl font-medium shadow-lg"><i class="fas fa-home w-5 text-center"></i> Головна</a>
                 <a href="statistics.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-chart-pie w-5 text-center"></i> Статистика</a>
                 <a href="history.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-list w-5 text-center"></i> Історія</a>
-                <a href="limits.html" class="flex items-center gap-4 bg-green-brand text-white px-5 py-3 rounded-2xl font-medium shadow-lg"><i class="fas fa-shield-alt w-5 text-center"></i> Ліміти</a>
-                <a href="settings.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-cog w-5 text-center"></i> Налаштування</a>
+                <a href="limits.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-shield-alt w-5 text-center"></i> Ліміти</a>
+                <a href="settings.html" class="flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors"><i class="fas fa-cog w-5 text-center"></i> Профіль</a>
             </nav>
         </div>
     </aside>
 
     <main class="flex-1 max-w-6xl mx-auto w-full flex flex-col gap-6">
-        <div class="flex justify-between items-end mb-2 px-2">
+        
+        <header class="lg:hidden mt-2 mb-2 px-2 flex justify-between items-center">
             <div>
-                <h2 class="text-3xl font-bold text-slate-800">Бюджети та Ліміти</h2>
-                <p class="text-slate-500 text-sm mt-1">Встанови обмеження, щоб не витрачати зайвого</p>
+               <h1 class="text-4xl font-extrabold text-slate-900 tracking-tighter"><i class="fas fa-credit-card text-emerald-500 mr-2"></i>PayTrack<span class="text-emerald-500">.</span></h1>
+                <p class="text-slate-500 text-sm font-medium mt-1">Бюджети та Ліміти</p>
             </div>
+        </header>
+    <main class="flex-1 max-w-6xl mx-auto w-full flex flex-col gap-6">
+        <div class="flex justify-between items-end mb-2 px-2">
+
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
