@@ -18,7 +18,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
 </head>
-<body class="flex min-h-screen text-slate-800 p-2 md:p-6 gap-6">
+<body class="flex min-h-screen text-slate-800 p-2 md:p-6 gap-6 pb-24 md:pb-6">
 
     <aside class="sidebar w-64 p-8 hidden lg:flex flex-col justify-between shadow-xl">
         <div>
@@ -89,6 +89,29 @@
 
     </main>
 
+<nav class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 flex justify-around items-center py-2 pb-safe lg:hidden z-50 shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.05)]">
+        <a href="index.html" class="flex flex-col items-center p-2 text-emerald-600">
+            <i class="fas fa-home text-xl mb-1"></i>
+            <span class="text-[10px] font-medium">Головна</span>
+        </a>
+        <a href="statistics.html" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-500 transition-colors">
+            <i class="fas fa-chart-pie text-xl mb-1"></i>
+            <span class="text-[10px] font-medium">Стат</span>
+        </a>
+        <a href="history.html" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-500 transition-colors">
+            <i class="fas fa-list text-xl mb-1"></i>
+            <span class="text-[10px] font-medium">Історія</span>
+        </a>
+        <a href="limits.html" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-500 transition-colors">
+            <i class="fas fa-shield-alt text-xl mb-1"></i>
+            <span class="text-[10px] font-medium">Ліміти</span>
+        </a>
+        <a href="settings.html" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-500 transition-colors">
+            <i class="fas fa-cog text-xl mb-1"></i>
+            <span class="text-[10px] font-medium">Профіль</span>
+        </a>
+    </nav>
+    
     <script src="app.js"></script>
 </body>
 </html>
