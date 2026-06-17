@@ -2,7 +2,7 @@
 let transactions = JSON.parse(localStorage.getItem('fb_bento_data')) || [];
 let userGoal = JSON.parse(localStorage.getItem('fb_goal_data')) || null;
 let userLimits = JSON.parse(localStorage.getItem('fb_limits_data')) || {};
-let userProfile = JSON.parse(localStorage.getItem('fb_user_profile')) || { name: 'Користувач', email: 'finance@buddy.ua', currency: '₴', theme: 'light' };
+let userProfile = JSON.parse(localStorage.getItem('fb_user_profile')) || { name: 'Користувач', email: 'finance@buddy.ua', currency: '₴', theme: 'light', criticMode: false };
 
 const CURRENCY = userProfile.currency || '₴';
 let currentChart = null; 
@@ -52,7 +52,7 @@ function updateDesktopNavigation() {
     if (!desktopNav) return;
     desktopNav.querySelectorAll('a').forEach(link => {
         if (link.getAttribute('href') === page) link.className = "flex items-center gap-4 bg-green-brand text-white px-5 py-3 rounded-2xl font-medium shadow-lg";
-        else link.className = "flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors";
+        else link.className = "flex items-center gap-4 px-5 py-3 rounded-2xl font-medium text-slate-500 hover:bg-slate-100 transition-colors dark:hover:bg-slate-800";
     });
 }
 
@@ -92,16 +92,50 @@ function checkLimitsAndAlert(category) {
         if (toast && msg) {
             msg.innerHTML = `Ви перевищили встановлений ліміт на <strong>${conf.name}</strong> на <strong>${CURRENCY}${formatMoney(overspent)}</strong>.`;
             
-            // Анімація появи
             toast.classList.remove('-translate-y-40', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
             
-            // Автоматично ховаємо через 4 секунди
             setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('-translate-y-40', 'opacity-0');
             }, 4000);
         }
+    }
+}
+
+// ================= РЕЖИМ КРИТИКА 🌶️ =================
+function showCriticReaction(amount, categoryName) {
+    const jokes = [
+        `Мінус ${CURRENCY}${formatMoney(amount)}? З такими темпами замість крутого Ford Fusion чи Passat доведеться купувати проїзний на трамвай.`,
+        `Ого, які витрати! Здається, студентський бюджет щойно зробив сальто і помер.`,
+        `Куди пішли гроші? Тільки не кажи, що знову на відкриття кейсів у CS2 або на підписку Dota Plus!`,
+        `На ${categoryName}? Серйозно? Вчити білети в автошколі було легше, ніж перестати тринькати гроші.`,
+        `Габен вже будує собі нову яхту за твої гроші, а ти все ще без заощаджень.`,
+        `Ще трохи таких імпульсивних покупок, і нам доведеться продати твої нові кросівки PUMA, щоб поїсти.`
+    ];
+
+    const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+
+    const toast = document.getElementById('limit-alert-toast');
+    const msg = document.getElementById('limit-alert-message');
+    
+    if (toast && msg) {
+        msg.innerHTML = `<strong>🌶️ Критик каже:</strong><br>${randomJoke}`;
+        
+        toast.classList.remove('bg-slate-900', 'dark:bg-slate-800');
+        toast.classList.add('bg-rose-900');
+
+        toast.classList.remove('-translate-y-40', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        setTimeout(() => {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('-translate-y-40', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.remove('bg-rose-900');
+                toast.classList.add('bg-slate-900', 'dark:bg-slate-800');
+            }, 300);
+        }, 5000); 
     }
 }
 
@@ -126,9 +160,9 @@ function initDashboard() {
         document.getElementById('t-name').value = ''; document.getElementById('t-amount').value = '';
         updateDashboardUI();
 
-        // ОНОВЛЕННЯ: Викликаємо перевірку лімітів після додавання витрати
         if (type === 'expense') {
             checkLimitsAndAlert(category);
+            if (userProfile.criticMode) showCriticReaction(amount, categoryConfig[category].name);
         }
     });
 
@@ -175,14 +209,14 @@ function updateDashboardUI() {
             recentTransactions.forEach(t => {
                 const conf = categoryConfig[t.category];
                 const sign = t.type === 'income' ? '+' : '-';
-                const amountColor = t.type === 'income' ? 'text-emerald-600' : 'text-slate-800';
+                const amountColor = t.type === 'income' ? 'text-emerald-600' : 'text-slate-800 dark:text-white';
                 
                 htmlStr += `
-                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-50">
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center ${conf.bg} ${conf.color} text-xs shrink-0"><i class="fas ${conf.icon}"></i></div>
                             <div class="min-w-0">
-                                <div class="font-bold text-sm text-slate-800 truncate max-w-[100px] sm:max-w-[120px]">${t.name}</div>
+                                <div class="font-bold text-sm text-slate-800 dark:text-white truncate max-w-[100px] sm:max-w-[120px]">${t.name}</div>
                                 <div class="text-[10px] text-slate-400 truncate">${t.date}</div>
                             </div>
                         </div>
@@ -192,7 +226,7 @@ function updateDashboardUI() {
             htmlStr += '</div>';
             
             htmlStr += `
-                <a href="history.html" class="block w-full text-center mt-3 pt-3 border-t border-slate-100 text-xs font-bold text-emerald-500 hover:text-emerald-600 transition-colors">
+                <a href="history.html" class="block w-full text-center mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 text-xs font-bold text-emerald-500 hover:text-emerald-600 transition-colors">
                     Усі операції <i class="fas fa-arrow-right ml-1"></i>
                 </a>`;
             list.innerHTML = htmlStr;
@@ -220,23 +254,23 @@ function updateDashboardUI() {
             let goalPercent = Math.min((saved / userGoal.amount) * 100, 100);
             const remaining = userGoal.amount - saved;
             const remainingText = remaining > 0 ? `${CURRENCY}${formatMoney(remaining)}` : 'Ціль досягнуто! 🎉';
-            const remainingColor = remaining > 0 ? 'text-slate-800' : 'text-emerald-500';
+            const remainingColor = remaining > 0 ? 'text-slate-800 dark:text-white' : 'text-emerald-500';
 
             goalBox.innerHTML = `
                 <div class="flex flex-col h-full justify-between">
                     <div>
                         <p class="text-sm text-slate-400 mb-1">Збираємо на:</p>
-                        <h4 class="font-bold text-xl text-slate-800 truncate">${userGoal.name}</h4>
+                        <h4 class="font-bold text-xl text-slate-800 dark:text-white truncate">${userGoal.name}</h4>
                         <div class="flex justify-between items-end mt-4 mb-2">
                             <span class="text-emerald-500 font-bold text-xl">${Math.floor(goalPercent)}%</span>
                             <span class="text-xs text-slate-400 font-medium">з ${CURRENCY}${formatMoney(userGoal.amount)}</span>
                         </div>
-                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                        <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
                             <div class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-full rounded-full" style="width: ${goalPercent}%"></div>
                         </div>
                     </div>
                     
-                    <div class="mt-4 p-3 bg-slate-50 rounded-xl text-center border border-slate-100">
+                    <div class="mt-4 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl text-center border border-slate-100 dark:border-slate-700/50">
                         <p class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">Залишилось зібрати</p>
                         <p class="font-bold text-lg ${remainingColor}">${remainingText}</p>
                     </div>
@@ -311,15 +345,15 @@ function renderChart(timeFilter) {
                 const conf = categoryConfig[cat];
                 const percent = Math.round((amount / totalExpense) * 100);
                 catListEl.innerHTML += `
-                    <div class="flex justify-between items-center mb-4 p-3 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
+                    <div class="flex justify-between items-center mb-4 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full flex items-center justify-center ${conf.bg} ${conf.color} shrink-0 text-sm"><i class="fas ${conf.icon}"></i></div>
                             <div>
-                                <p class="font-bold text-slate-800 text-sm">${conf.name}</p>
+                                <p class="font-bold text-slate-800 dark:text-white text-sm">${conf.name}</p>
                                 <p class="text-[11px] text-slate-400 font-medium">${percent}% від витрат</p>
                             </div>
                         </div>
-                        <div class="font-bold text-slate-800 text-sm shrink-0 ml-2">
+                        <div class="font-bold text-slate-800 dark:text-white text-sm shrink-0 ml-2">
                             ${CURRENCY}${formatMoney(amount)}
                         </div>
                     </div>
@@ -387,20 +421,20 @@ function initHistory() {
         filtered.forEach(t => {
             const conf = categoryConfig[t.category];
             const sign = t.type === 'income' ? '+' : '-';
-            const amountColor = t.type === 'income' ? 'text-emerald-600' : 'text-slate-800';
+            const amountColor = t.type === 'income' ? 'text-emerald-600' : 'text-slate-800 dark:text-white';
             
             list.innerHTML += `
-                <div class="flex justify-between items-center p-4 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition-all border border-transparent hover:border-slate-100 group">
+                <div class="flex justify-between items-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 hover:bg-white dark:hover:bg-slate-700 hover:shadow-md transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-600 group">
                     <div class="flex items-center gap-5">
                         <div class="w-12 h-12 rounded-full flex items-center justify-center ${conf.bg} ${conf.color} shadow-inner"><i class="fas ${conf.icon} text-lg"></i></div>
                         <div>
-                            <div class="font-bold text-slate-800 text-base">${t.name}</div>
+                            <div class="font-bold text-slate-800 dark:text-white text-base">${t.name}</div>
                             <div class="text-xs text-slate-400 font-medium mt-0.5">${conf.name} • ${t.date}</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-6">
                         <div class="font-bold text-lg tracking-tight ${amountColor}">${sign}${CURRENCY}${formatMoney(t.amount)}</div>
-                        <button onclick="deleteTransaction(${t.id})" class="w-8 h-8 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"><i class="fas fa-trash text-sm"></i></button>
+                        <button onclick="deleteTransaction(${t.id})" class="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"><i class="fas fa-trash text-sm"></i></button>
                     </div>
                 </div>`;
         });
@@ -409,8 +443,8 @@ function initHistory() {
     if(searchInput) searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; renderHistory(); });
     typeButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            typeButtons.forEach(b => { b.classList.remove('bg-white', 'shadow-sm', 'text-slate-800', 'active'); b.classList.add('text-slate-400'); });
-            e.target.classList.add('bg-white', 'shadow-sm', 'text-slate-800', 'active'); e.target.classList.remove('text-slate-400');
+            typeButtons.forEach(b => { b.classList.remove('bg-white', 'shadow-sm', 'text-slate-800', 'dark:text-slate-800', 'active'); b.classList.add('text-slate-400'); });
+            e.target.classList.add('bg-white', 'shadow-sm', 'text-slate-800', 'dark:text-slate-800', 'active'); e.target.classList.remove('text-slate-400');
             currentTypeFilter = e.target.getAttribute('data-type'); renderHistory();
         });
     });
@@ -458,10 +492,10 @@ function renderLimits() {
         list.innerHTML += `
             <div class="relative group">
                 <div class="flex justify-between items-end mb-2">
-                    <div class="flex items-center gap-2"><i class="fas ${conf.icon} text-slate-400 w-5 text-center"></i><span class="font-bold text-slate-800">${conf.name}</span></div>
+                    <div class="flex items-center gap-2"><i class="fas ${conf.icon} text-slate-400 w-5 text-center"></i><span class="font-bold text-slate-800 dark:text-white">${conf.name}</span></div>
                     <div class="text-right"><span class="${textColor} font-bold">${CURRENCY}${formatMoney(spentAmount)}</span><span class="text-slate-400 text-sm"> / ${CURRENCY}${formatMoney(limitAmount)}</span></div>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden"><div class="${barColor} h-full rounded-full transition-all duration-700" style="width: ${percent}%"></div></div>
+                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden"><div class="${barColor} h-full rounded-full transition-all duration-700" style="width: ${percent}%"></div></div>
                 <div class="flex justify-between items-center mt-1"><span class="text-xs text-slate-400 font-medium">${remainingText}</span><button onclick="deleteLimit('${cat}')" class="text-xs text-rose-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity">Видалити ліміт</button></div>
             </div>`;
     });
@@ -484,43 +518,24 @@ function initSettings() {
 
     const currencyInput = document.getElementById('user-currency-input');
     const themeInput = document.getElementById('user-theme-input');
+    const criticInput = document.getElementById('user-critic-input');
     
     if(currencyInput && themeInput) {
         currencyInput.value = userProfile.currency || '₴';
         themeInput.checked = userProfile.theme === 'dark';
+        if(criticInput) criticInput.checked = userProfile.criticMode === true;
 
         document.getElementById('app-settings-form').addEventListener('submit', (e) => {
             e.preventDefault();
             userProfile.currency = currencyInput.value;
             userProfile.theme = themeInput.checked ? 'dark' : 'light';
+            userProfile.criticMode = criticInput ? criticInput.checked : false;
             localStorage.setItem('fb_user_profile', JSON.stringify(userProfile));
             
             alert("Налаштування інтерфейсу оновлено!");
             window.location.reload();
         });
     }
-
-        // ЛОГІКА КНОПКИ ВСТАНОВЛЕННЯ
-    const installBtn = document.getElementById('install-app-btn');
-    if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                // Якщо це Android/Desktop Chrome - показуємо системне вікно
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') deferredPrompt = null;
-            } else {
-                // Якщо це iPhone (iOS) або додаток вже встановлено
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                if (isIOS) {
-                    alert("🍎 Щоб встановити додаток на iPhone:\n\n1. Натисни кнопку 'Поділитися' (квадратик зі стрілочкою внизу екрана).\n2. Обери пункт 'На початковий екран' (Add to Home Screen).");
-                } else {
-                    alert("✅ Додаток вже встановлено на ваш пристрій, або ваш браузер не підтримує цю функцію.");
-                }
-            }
-        });
-    }
-
 
     const clearBtn = document.getElementById('clear-data-btn');
     if(clearBtn) {
@@ -532,21 +547,4 @@ function initSettings() {
             }
         });
     }
-    
 }
-// ================= PWA: SERVICE WORKER =================
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(registration => console.log('ServiceWorker зареєстровано успішно:', registration.scope))
-            .catch(err => console.log('Помилка реєстрації ServiceWorker:', err));
-    });
-}
-
-// Перехоплення події встановлення PWA (для Android/Desktop)
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});
-
