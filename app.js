@@ -500,6 +500,28 @@ function initSettings() {
         });
     }
 
+        // ЛОГІКА КНОПКИ ВСТАНОВЛЕННЯ
+    const installBtn = document.getElementById('install-app-btn');
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Якщо це Android/Desktop Chrome - показуємо системне вікно
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') deferredPrompt = null;
+            } else {
+                // Якщо це iPhone (iOS) або додаток вже встановлено
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    alert("🍎 Щоб встановити додаток на iPhone:\n\n1. Натисни кнопку 'Поділитися' (квадратик зі стрілочкою внизу екрана).\n2. Обери пункт 'На початковий екран' (Add to Home Screen).");
+                } else {
+                    alert("✅ Додаток вже встановлено на ваш пристрій, або ваш браузер не підтримує цю функцію.");
+                }
+            }
+        });
+    }
+
+
     const clearBtn = document.getElementById('clear-data-btn');
     if(clearBtn) {
         clearBtn.addEventListener('click', () => {
@@ -520,3 +542,11 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.log('Помилка реєстрації ServiceWorker:', err));
     });
 }
+
+// Перехоплення події встановлення PWA (для Android/Desktop)
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+});
+
