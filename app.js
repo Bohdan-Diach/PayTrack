@@ -111,7 +111,7 @@ function showCriticReaction(amount, categoryId, categoryName) {
 
     // 1. Реакція на дуже великі витрати (пріоритет)
     if (amount >= 3000) {
-        jokes.push(`Ого, ${CURRENCY}${formatMoney(amount)} за раз?! Твій омріяний Ford Fusion чи Passat щойно віддалився ще на рік.`);
+        jokes.push(`Ого, ${CURRENCY}${formatMoney(amount)} за раз?! Твоя мрія щойно віддалилася ще на рік.`);
         jokes.push(`З такими масштабними витратами тобі доведеться писати код цілодобово, щоб це відбити.`);
         jokes.push(`Мінус ${CURRENCY}${formatMoney(amount)}? Здається, твій бюджет щойно зробив сальто і помер.`);
     } 
@@ -123,7 +123,7 @@ function showCriticReaction(amount, categoryId, categoryName) {
                 jokes.push(`Сподіваюсь, це гречка по акції. Проїдаємо майбутню машину?`);
                 break;
             case 'transport':
-                jokes.push(`На таксі чи маршрутку? Права отримав, а на Mazda 6 ще не назбирав... Доводиться терпіти.`);
+                jokes.push(`На таксі чи маршрутку? Права отримав, а на Машину ще не назбирав... Доводиться терпіти.`);
                 jokes.push(`Може краще було пішки? І для здоров'я корисно, і ${CURRENCY}${formatMoney(amount)} в кишені б залишились.`);
                 break;
             case 'clothing':
@@ -132,14 +132,14 @@ function showCriticReaction(amount, categoryId, categoryName) {
                 break;
             case 'entertainment':
                 jokes.push(`Розважаємось? Тільки не кажи, що це знову на кейси в CS2 або підписку Dota Plus! Габен вже будує собі яхту.`);
-                jokes.push(`Мінус ${CURRENCY}${formatMoney(amount)} на розваги. Кодити сайти на Django було б безкоштовно і корисніше!`);
+                jokes.push(`Мінус ${CURRENCY}${formatMoney(amount)} на розваги. Кодити сайти було б безкоштовно і корисніше!`);
                 break;
             case 'shopping':
                 jokes.push(`Чергові покупки? Це тобі не верстку робити, тут треба фінансову архітектуру продумувати!`);
                 jokes.push(`Сховай картку, поки ми не залишилися без штанів через ці спонтанні бажання.`);
                 break;
             case 'utilities':
-                jokes.push(`Комуналка... Ну ок, хоча б за інтернет заплатив, щоб було де ціни на AUTO.RIA моніторити.`);
+                jokes.push(`Комуналка... Ну ок, хоча б за інтернет заплатив, щоб бхочь щось було.`);
                 jokes.push(`Життя доросле, нічого не скажеш. Але світло в кімнаті вимикай частіше!`);
                 break;
             default:
