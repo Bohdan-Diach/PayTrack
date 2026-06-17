@@ -73,7 +73,7 @@
 
             <div class="bento-card bg-white p-8">
                 <h3 class="font-bold text-lg mb-6 text-slate-800"><i class="fas fa-sliders-h text-emerald-500 mr-2"></i> Інтерфейс</h3>
-                <form id="app-settings-form" class="space-y-4">
+<form id="app-settings-form" class="space-y-4">
                     <div>
                         <label class="text-sm font-medium text-slate-500">Валюта за замовчуванням</label>
                         <select id="user-currency-input" class="w-full bg-slate-50 py-3 px-4 rounded-xl mt-1 outline-none focus:ring-2 focus:ring-emerald-500 font-medium cursor-pointer">
@@ -89,6 +89,18 @@
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="user-theme-input" class="sr-only peer">
                             <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- НОВИЙ ПЕРЕМИКАЧ: Режим Критика -->
+                    <div class="flex items-center justify-between py-3 border-t border-slate-100 dark:border-slate-700">
+                        <div>
+                            <label class="text-sm font-bold text-slate-800 flex items-center gap-2">🌶️ Режим Критика</label>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Додаток буде саркастично коментувати твої витрати</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="user-critic-input" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
                         </label>
                     </div>
 
