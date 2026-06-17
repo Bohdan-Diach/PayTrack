@@ -89,8 +89,13 @@
                 <form id="transaction-form" class="flex flex-col md:flex-row gap-4">
                     <input type="text" id="t-name" placeholder="Назва (необов'язково)" class="flex-1 bg-slate-50 py-4 px-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium">
                     <input type="number" id="t-amount" placeholder="Сума (₴)" required class="w-full md:w-40 bg-slate-50 py-4 px-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium">
-                    <select id="t-category" class="w-full md:w-48 bg-slate-50 py-4 px-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium cursor-pointer">
-                        <optgroup label="Доходи"><option value="income">💰 Дохід</option></optgroup>
+                                        <select id="t-category" class="w-full md:w-48 bg-slate-50 py-4 px-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium cursor-pointer">
+                        <optgroup label="Доходи">
+                            <option value="salary">💵 Зарплата</option>
+                            <option value="freelance">💻 Фріланс</option>
+                            <option value="gifts">🎁 Подарунки</option>
+                            <option value="cashback">🪙 Кешбек</option>
+                        </optgroup>
                         <optgroup label="Витрати">
                             <option value="products" selected>🛒 Продукти</option>
                             <option value="transport">🚗 Транспорт</option>
@@ -101,6 +106,7 @@
                             <option value="other">📦 Інше</option>
                         </optgroup>
                     </select>
+
                     <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg active:scale-95 whitespace-nowrap">Додати</button>
                 </form>
             </div>
