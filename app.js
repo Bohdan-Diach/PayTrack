@@ -7,25 +7,16 @@ let userProfile = JSON.parse(localStorage.getItem('fb_user_profile')) || { name:
 const CURRENCY = userProfile.currency || '₴';
 let currentChart = null; 
 
-// Застосовуємо тему
-if (userProfile.theme === 'dark') {
-    document.documentElement.classList.add('dark');
-} else {
-    document.documentElement.classList.remove('dark');
-}
+if (userProfile.theme === 'dark') document.documentElement.classList.add('dark');
+else document.documentElement.classList.remove('dark');
 
-// ================= КАТЕГОРІЇ (ОНОВЛЕНО: ДОДАНО ТИПИ ТА НОВІ ДОХОДИ) =================
+// ================= КАТЕГОРІЇ =================
 const categoryConfig = {
-    // Стара категорія (залишаємо, щоб старі збережені дані не зламалися)
     'income': { name: 'Дохід', icon: 'fa-arrow-down', emoji: '💰', color: 'text-emerald-500', bg: 'bg-emerald-100', type: 'income' },
-    
-    // Нові доходи
     'salary': { name: 'Зарплата', icon: 'fa-wallet', emoji: '💵', color: 'text-emerald-500', bg: 'bg-emerald-100', type: 'income' },
     'freelance': { name: 'Фріланс', icon: 'fa-laptop-code', emoji: '💻', color: 'text-teal-500', bg: 'bg-teal-100', type: 'income' },
     'gifts': { name: 'Подарунки', icon: 'fa-gift', emoji: '🎁', color: 'text-yellow-500', bg: 'bg-yellow-100', type: 'income' },
     'cashback': { name: 'Кешбек', icon: 'fa-coins', emoji: '🪙', color: 'text-green-500', bg: 'bg-green-100', type: 'income' },
-
-    // Витрати
     'products': { name: 'Продукти', icon: 'fa-shopping-cart', emoji: '🛒', color: 'text-blue-500', bg: 'bg-blue-100', type: 'expense' },
     'transport': { name: 'Транспорт', icon: 'fa-car', emoji: '🚗', color: 'text-rose-500', bg: 'bg-rose-100', type: 'expense' },
     'utilities': { name: 'Ком. послуги', icon: 'fa-bolt', emoji: '💡', color: 'text-amber-500', bg: 'bg-amber-100', type: 'expense' },
@@ -81,6 +72,39 @@ function updateSidebarProfile() {
     });
 }
 
+// ================= СПОВІЩЕННЯ ПРО ЛІМІТИ =================
+function checkLimitsAndAlert(category) {
+    if (!userLimits[category]) return;
+
+    const spentAmount = transactions
+        .filter(t => t.type === 'expense' && t.category === category)
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const limitAmount = userLimits[category];
+
+    if (spentAmount > limitAmount) {
+        const conf = categoryConfig[category];
+        const overspent = spentAmount - limitAmount;
+        
+        const toast = document.getElementById('limit-alert-toast');
+        const msg = document.getElementById('limit-alert-message');
+        
+        if (toast && msg) {
+            msg.innerHTML = `Ви перевищили встановлений ліміт на <strong>${conf.name}</strong> на <strong>${CURRENCY}${formatMoney(overspent)}</strong>.`;
+            
+            // Анімація появи
+            toast.classList.remove('-translate-y-40', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            // Автоматично ховаємо через 4 секунди
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-40', 'opacity-0');
+            }, 4000);
+        }
+    }
+}
+
 // ================= ГОЛОВНА =================
 function initDashboard() {
     updateDashboardUI();
@@ -89,8 +113,6 @@ function initDashboard() {
         let name = document.getElementById('t-name').value;
         const amount = parseFloat(document.getElementById('t-amount').value);
         const category = document.getElementById('t-category').value;
-        
-        // ОНОВЛЕННЯ: Тепер ми беремо тип транзакції прямо з конфігурації
         const type = categoryConfig[category].type; 
         
         if (!name.trim()) name = categoryConfig[category].name;
@@ -103,6 +125,11 @@ function initDashboard() {
         localStorage.setItem('fb_bento_data', JSON.stringify(transactions));
         document.getElementById('t-name').value = ''; document.getElementById('t-amount').value = '';
         updateDashboardUI();
+
+        // ОНОВЛЕННЯ: Викликаємо перевірку лімітів після додавання витрати
+        if (type === 'expense') {
+            checkLimitsAndAlert(category);
+        }
     });
 
     if(document.getElementById('goal-modal-form')) {
