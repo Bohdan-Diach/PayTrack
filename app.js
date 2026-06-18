@@ -319,59 +319,127 @@ function updateDashboardUI() {
 }
 
 // ================= СТАТИСТИКА =================
+let currentTimeFilter = 'all';
+let currentViewType = 'doughnut'; // 'doughnut' або 'bar'
+
 function initStatistics() {
-    const buttons = document.querySelectorAll('.filter-btn');
-    buttons.forEach(btn => {
+    // 1. Кнопки часу (Тиждень, Місяць тощо)
+    const timeButtons = document.querySelectorAll('.filter-btn');
+    timeButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            buttons.forEach(b => { b.classList.remove('bg-emerald-500', 'shadow-lg'); b.classList.add('bg-white/10'); });
+            timeButtons.forEach(b => { b.classList.remove('bg-emerald-500', 'shadow-lg'); b.classList.add('bg-white/10'); });
             e.target.classList.remove('bg-white/10');
             e.target.classList.add('bg-emerald-500', 'shadow-lg');
-            renderChart(e.target.getAttribute('data-filter'));
+            currentTimeFilter = e.target.getAttribute('data-filter');
+            renderChart();
         });
     });
-    renderChart('all');
+
+    // 2. Кнопки типу графіка (Категорії / Тренди)
+    const btnDoughnut = document.getElementById('btn-type-doughnut');
+    const btnBar = document.getElementById('btn-type-bar');
+
+    if (btnDoughnut && btnBar) {
+        btnDoughnut.addEventListener('click', () => {
+            currentViewType = 'doughnut';
+            btnDoughnut.classList.replace('bg-transparent', 'bg-slate-700');
+            btnDoughnut.classList.replace('text-slate-400', 'text-white');
+            btnBar.classList.remove('bg-slate-700', 'text-white');
+            btnBar.classList.add('text-slate-400');
+            renderChart();
+        });
+        btnBar.addEventListener('click', () => {
+            currentViewType = 'bar';
+            btnBar.classList.add('bg-slate-700', 'text-white');
+            btnBar.classList.remove('text-slate-400');
+            btnDoughnut.classList.remove('bg-slate-700', 'text-white');
+            btnDoughnut.classList.add('text-slate-400');
+            renderChart();
+        });
+    }
+    renderChart();
 }
 
-function renderChart(timeFilter) {
+function getTrendHTML(current, prev, isExpense) {
+    if (prev === 0) return ''; 
+    const diff = current - prev;
+    const percent = Math.abs(Math.round((diff / prev) * 100));
+    if (diff === 0) return `<span class="text-[10px] text-slate-400 font-medium ml-2 px-2 py-0.5 bg-slate-100 rounded-md">Без змін</span>`;
+
+    let color = '';
+    let icon = diff > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+    
+    // Для витрат ріст - це погано (червоний). Для доходів/балансу - добре (зелений).
+    if (isExpense) color = diff > 0 ? 'text-rose-500 bg-rose-100' : 'text-emerald-500 bg-emerald-100';
+    else color = diff > 0 ? 'text-emerald-500 bg-emerald-100' : 'text-rose-500 bg-rose-100';
+
+    return `<span class="text-[10px] font-bold ${color} ml-2 px-2 py-0.5 rounded-md"><i class="fas ${icon}"></i> ${percent}%</span>`;
+}
+
+function renderChart() {
     const now = Date.now();
     const DAY_IN_MS = 24 * 60 * 60 * 1000;
     
+    let periodMs = 0;
+    if (currentTimeFilter === 'day') periodMs = DAY_IN_MS;
+    else if (currentTimeFilter === 'week') periodMs = DAY_IN_MS * 7;
+    else if (currentTimeFilter === 'month') periodMs = DAY_IN_MS * 30;
+    else if (currentTimeFilter === 'year') periodMs = DAY_IN_MS * 365;
+
     let filtered = transactions;
+    let prevFiltered = [];
 
-    if (timeFilter === 'day') filtered = filtered.filter(t => (now - t.id) <= DAY_IN_MS);
-    else if (timeFilter === 'week') filtered = filtered.filter(t => (now - t.id) <= DAY_IN_MS * 7);
-    else if (timeFilter === 'month') filtered = filtered.filter(t => (now - t.id) <= DAY_IN_MS * 30);
-    else if (timeFilter === 'year') filtered = filtered.filter(t => (now - t.id) <= DAY_IN_MS * 365);
+    // Фільтруємо поточний і минулий періоди (для порівняння)
+    if (periodMs > 0) {
+        filtered = transactions.filter(t => (now - t.id) <= periodMs);
+        prevFiltered = transactions.filter(t => (now - t.id) > periodMs && (now - t.id) <= periodMs * 2);
+    }
 
+    let totalExpense = 0, totalIncome = 0;
+    let prevExpense = 0, prevIncome = 0;
     const expensesByCat = {};
-    let totalExpense = 0;
-    let totalIncome = 0;
+    const expensesByDate = {}; // Для стовпчикового графіка
 
-    filtered.forEach(t => { 
+    // Аналіз поточного періоду
+    // Робимо копію і перевертаємо, щоб дати йшли від старіших до новіших
+    [...filtered].reverse().forEach(t => { 
         if (t.type === 'expense') {
             expensesByCat[t.category] = (expensesByCat[t.category] || 0) + t.amount; 
             totalExpense += t.amount; 
+            
+            // Групуємо по даті (беремо тільки "17 черв.")
+            const dateStr = t.date.split(' о ')[0];
+            expensesByDate[dateStr] = (expensesByDate[dateStr] || 0) + t.amount;
         } else {
             totalIncome += t.amount;
         }
     });
 
+    // Аналіз минулого періоду
+    prevFiltered.forEach(t => { 
+        if (t.type === 'expense') prevExpense += t.amount; 
+        else prevIncome += t.amount; 
+    });
+
+    // 1. ОНОВЛЕННЯ ТЕКСТІВ ТА ТРЕНДІВ
     if(document.getElementById('stat-period-income')) document.getElementById('stat-period-income').textContent = `+${CURRENCY}${formatMoney(totalIncome)}`;
+    if(document.getElementById('trend-income')) document.getElementById('trend-income').innerHTML = getTrendHTML(totalIncome, prevIncome, false);
+
     if(document.getElementById('stat-period-expense')) document.getElementById('stat-period-expense').textContent = `-${CURRENCY}${formatMoney(totalExpense)}`;
+    if(document.getElementById('trend-expense')) document.getElementById('trend-expense').innerHTML = getTrendHTML(totalExpense, prevExpense, true);
     
     const flowEl = document.getElementById('stat-period-flow');
     if (flowEl) {
         const netFlow = totalIncome - totalExpense;
+        const prevNetFlow = prevIncome - prevExpense;
         flowEl.textContent = `${netFlow > 0 ? '+' : ''}${CURRENCY}${formatMoney(netFlow)}`;
         flowEl.className = `text-2xl font-bold ${netFlow >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
+        if(document.getElementById('trend-balance')) document.getElementById('trend-balance').innerHTML = getTrendHTML(netFlow, prevNetFlow, false);
     }
 
-    const expStatEl = document.getElementById('total-expense-stat');
-    if(expStatEl) expStatEl.textContent = `${CURRENCY}${formatMoney(totalExpense)}`;
-    
-    const hint = document.getElementById('empty-state-hint');
-    if (totalExpense === 0) { if(hint) hint.classList.remove('hidden'); } else { if(hint) hint.classList.add('hidden'); }
-    
+    if(document.getElementById('total-expense-stat')) document.getElementById('total-expense-stat').textContent = `${CURRENCY}${formatMoney(totalExpense)}`;
+
+    // 2. ОНОВЛЕННЯ СПИСКУ ДЕТАЛІЗАЦІЇ
     const catListEl = document.getElementById('category-details-list');
     if (catListEl) {
         catListEl.innerHTML = '';
@@ -392,54 +460,68 @@ function renderChart(timeFilter) {
                                 <p class="text-[11px] text-slate-400 font-medium">${percent}% від витрат</p>
                             </div>
                         </div>
-                        <div class="font-bold text-slate-800 dark:text-white text-sm shrink-0 ml-2">
-                            ${CURRENCY}${formatMoney(amount)}
-                        </div>
-                    </div>
-                `;
+                        <div class="font-bold text-slate-800 dark:text-white text-sm shrink-0 ml-2">${CURRENCY}${formatMoney(amount)}</div>
+                    </div>`;
             });
         }
     }
 
-    generateSmartAdvice(expensesByCat, totalExpense);
-
-    const catKeys = Object.keys(expensesByCat);
-    const labels = catKeys.map(k => categoryConfig[k].name);
-    const emojis = catKeys.map(k => categoryConfig[k].emoji); 
-    const data = Object.values(expensesByCat);
-    const categoryColors = { 'products': '#3b82f6', 'transport': '#f43f5e', 'utilities': '#f59e0b', 'clothing': '#ec4899', 'entertainment': '#a855f7', 'shopping': '#6366f1', 'other': '#64748b' };
-    const bgColors = catKeys.map(k => categoryColors[k] || '#10b981');
-
+    // 3. МАЛЮВАННЯ ГРАФІКА (Doughnut або Bar)
     const chartEl = document.getElementById('analyticsChart');
-    if (chartEl) {
-        const ctx = chartEl.getContext('2d');
-        if (currentChart) currentChart.destroy();
+    if (!chartEl) return;
+    const ctx = chartEl.getContext('2d');
+    if (currentChart) currentChart.destroy();
+
+    const categoryColors = { 'products': '#3b82f6', 'transport': '#f43f5e', 'utilities': '#f59e0b', 'clothing': '#ec4899', 'entertainment': '#a855f7', 'shopping': '#6366f1', 'other': '#64748b' };
+
+    if (currentViewType === 'doughnut') {
+        const catKeys = Object.keys(expensesByCat);
+        const data = Object.values(expensesByCat);
+        const bgColors = catKeys.map(k => categoryColors[k] || '#10b981');
+
         currentChart = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: labels, datasets: [{ data: data.length ? data : [1], backgroundColor: data.length ? bgColors : ['rgba(255, 255, 255, 0.05)'], borderWidth: 0, hoverOffset: data.length ? 15 : 0 }] },
+            data: { 
+                labels: catKeys.map(k => categoryConfig[k].name), 
+                datasets: [{ data: data.length ? data : [1], backgroundColor: data.length ? bgColors : ['rgba(255, 255, 255, 0.05)'], borderWidth: 0, hoverOffset: data.length ? 10 : 0 }] 
+            },
             options: {
-                layout: { padding: 25 }, responsive: true, maintainAspectRatio: false, cutout: '75%',
+                layout: { padding: 20 }, responsive: true, maintainAspectRatio: false, cutout: '75%',
                 plugins: {
-                    legend: { display: data.length > 0, position: 'right', labels: { color: 'rgba(255, 255, 255, 0.8)', font: { family: 'Inter', size: 14 }, padding: 24, usePointStyle: true, pointStyle: 'circle' } },
-                    tooltip: { enabled: data.length > 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { size: 14, family: 'Inter' }, bodyFont: { size: 16, family: 'Inter', weight: 'bold' }, padding: 16, cornerRadius: 12, callbacks: { label: function(context) { return ` ${CURRENCY}${formatMoney(context.raw)}`; } } },
-                    datalabels: { color: '#ffffff', font: { family: 'Inter', size: 14, weight: 'bold' }, formatter: (value, context) => { if (totalExpense === 0) return null; const percent = Math.round((value / totalExpense) * 100); if (percent < 5) return null; return `${emojis[context.dataIndex]} ${percent}%`; } }
+                    legend: { display: data.length > 0, position: 'right', labels: { color: 'rgba(255, 255, 255, 0.8)', font: { family: 'Inter', size: 14 }, padding: 20, usePointStyle: true, pointStyle: 'circle' } },
+                    tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { size: 14, family: 'Inter' }, bodyFont: { size: 16, family: 'Inter', weight: 'bold' }, padding: 16, cornerRadius: 12, callbacks: { label: function(context) { return ` ${CURRENCY}${formatMoney(context.raw)}`; } } },
+                    datalabels: { display: false } // ПРИБИРАЄМО ЦИФРИ З КОЛА
+                }
+            }
+        });
+    } 
+    else if (currentViewType === 'bar') {
+        const dates = Object.keys(expensesByDate);
+        const amounts = Object.values(expensesByDate);
+
+        currentChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates.length ? dates : ['Немає даних'],
+                datasets: [{
+                    label: 'Витрати', data: amounts.length ? amounts : [0], backgroundColor: '#10b981', borderRadius: 6, barThickness: 'flex', maxBarThickness: 40
+                }]
+            },
+            options: {
+                layout: { padding: 10 }, responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'rgba(255, 255, 255, 0.5)', callback: function(value) { return CURRENCY + value; } } },
+                    x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.8)' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { size: 14, family: 'Inter' }, bodyFont: { size: 16, family: 'Inter', weight: 'bold' }, padding: 16, cornerRadius: 12 },
+                    datalabels: { display: false }
                 }
             }
         });
     }
 }
-
-function generateSmartAdvice(expenses, total) {
-    const adviceEl = document.getElementById('smart-advice-text');
-    if(!adviceEl) return;
-    if (total === 0) { adviceEl.innerHTML = "Поки що немає витрат за цей період. Чудовий час, щоб відкласти гроші! 🐷"; return; }
-    let maxCat = ''; let maxAmount = 0;
-    for(const [cat, amount] of Object.entries(expenses)) { if(amount > maxAmount) { maxAmount = amount; maxCat = cat; } }
-    let advice = `Найбільша категорія витрат: <strong>${categoryConfig[maxCat].name}</strong> (${CURRENCY}${formatMoney(maxAmount)}).<br><br>`;
-    const tips = { 'products': "🛒 Порада: Складання списку економить до 20% бюджету!", 'transport': "🚗 Порада: Можливо, варто розглянути альтернативні маршрути або частіше гуляти?", 'utilities': "💡 Порада: Зверніть увагу на енергозберігаючі прилади.", 'clothing': "👕 Порада: 'Правило 24 годин': перед покупкою почекайте добу.", 'entertainment': "🎬 Порада: Шукайте також безкоштовні івенти у вашому місті.", 'shopping': "🛍️ Порада: Емоційні покупки — головний ворог бюджету.", 'other': "📦 Порада: Деталізуйте ці витрати, щоб краще розуміти бюджет." };
-    adviceEl.innerHTML = advice + (tips[maxCat] || "Продовжуйте стежити за своїми витратами! 🌟");
-}
-
 // ================= ІСТОРІЯ =================
 function initHistory() {
     const searchInput = document.getElementById('search-input');
