@@ -7,6 +7,11 @@
 
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -22,7 +27,7 @@
         html.dark input, html.dark select { background-color: #334155; color: #f8fafc; border-color: #475569; }
         html.dark .bg-slate-50 { background-color: #334155; }
         html.dark nav.fixed { background-color: #1e293b; border-top: 1px solid #334155; }
-        html.dark .text-slate-800 { color: #f8fafc; }
+        html.dark .text-slate-800, html.dark .text-slate-900 { color: #f8fafc; }
         html.dark .text-slate-500 { color: #94a3b8; }
         html.dark .text-slate-400 { color: #64748b; }
         html.dark .bg-white { background-color: #1e293b; }
