@@ -1,68 +1,67 @@
-# PayTrack
 Markdown
-# Project Summary
+# Про Проєкт
 
-**PayTrack** is a modern, responsive web application designed for personal finance management. Built with pure HTML5, Vanilla JavaScript, and Tailwind CSS, the application provides an intuitive interface for tracking daily expenses, logging incomes, and managing monthly budgets. 
+**PayTrack** — це сучасний, адаптивний вебзастосунок, розроблений для управління особистими фінансами. Побудований виключно на HTML5, Vanilla JavaScript та Tailwind CSS, застосунок надає інтуїтивно зрозумілий інтерфейс для відстеження щоденних витрат, запису доходів та управління щомісячними бюджетами.
 
-Key features include a comprehensive dashboard with real-time balance visualization, a savings goal tracker ("На мрію"), categorized transaction history with search and filtering, and strict monthly limits for spending categories. The app features a dark-themed UI mode and a unique gamified **"Critic Mode"** that provides sarcastic, humorous feedback on the user's spending habits. All data is managed locally using the browser's `localStorage`, ensuring complete privacy and offline persistence without the need for a backend server.
+Ключові функції включають комплексну головну панель (дашборд) з візуалізацією балансу в реальному часі, трекер цілей накопичення ("На мрію"), історію транзакцій з розбивкою по категоріях, пошуком і фільтрацією, а також жорсткі щомісячні ліміти для категорій витрат. Додаток підтримує темну тему інтерфейсу та унікальний гейміфікований **"Режим Критика"** (Critic Mode), який надає саркастичний, гумористичний зворотний зв'язок щодо ваших витрат. Всі дані зберігаються локально за допомогою `localStorage` браузера, що гарантує повну конфіденційність та можливість роботи офлайн без необхідності використання бекенд-сервера.
 
-# Project Module Description
+# Опис Модулів Проєкту
 
-The application architecture is divided into several key modules across distinct HTML pages:
+Архітектура застосунку розділена на кілька ключових модулів, які розміщені на окремих HTML-сторінках:
 
-1. **Dashboard (`index.html`)**: The main hub displaying the available balance, a visual savings goal progress ring, recent transactions, and a quick-entry form for adding new expenses or incomes.
-2. **Statistics (`statistics.html`)**: Provides a visual breakdown of financial data, helping users analyze their spending habits across different categories over time.
-3. **History (`history.html`)**: A detailed chronological ledger of all financial operations. Features an integrated search bar and quick filters (All / Incomes / Expenses) for easy data retrieval.
-4. **Limits (`limits.html`)**: A budgeting interface where users can assign maximum monthly spending caps to specific categories (e.g., Groceries, Transport) and visually track their current usage against those caps.
-5. **Settings (`settings.html`)**: The personal cabinet where users can configure app preferences. Includes profile details, default currency selection, Dark Mode toggle, the gamified "Critic Mode" toggle, and a "Danger Zone" for a complete data reset.
+1. **Головна (`index.html`)**: Головний хаб, що відображає доступний баланс, візуальне кільце прогресу цілі, останні транзакції та форму для швидкого додавання нових витрат або доходів.
+2. **Статистика (`statistics.html`)**: Надає візуальний аналіз фінансових даних, допомагаючи користувачам аналізувати свої звички витрачати кошти за різними категоріями з плином часу.
+3. **Історія (`history.html`)**: Детальний хронологічний список усіх фінансових операцій. Включає вбудований пошук та швидкі фільтри (Всі / Доходи / Витрати) для легкого пошуку даних.
+4. **Ліміти (`limits.html`)**: Інтерфейс бюджетування, де користувачі можуть встановлювати максимальні щомісячні обмеження на конкретні категорії (наприклад, Продукти, Транспорт) і візуально відстежувати їх поточне використання відносно цих обмежень.
+5. **Налаштування (`settings.html`)**: Особистий кабінет, де користувачі можуть налаштувати параметри застосунку. Включає деталі профілю, вибір валюти за замовчуванням, перемикач темної теми, перемикач гейміфікованого "Режиму Критика" та "Небезпечну зону" для повного очищення даних.
 
-# Directory Tree
+# Структура Директорій
 
 ```text
 /
-├── index.html          # Main dashboard and entry point
-├── history.html        # Transaction ledger and filtering interface
-├── limits.html         # Budgeting and limits management
-├── settings.html       # Application settings and data reset
-├── statistics.html     # Data visualization and charts
-└── app.js              # Core business logic, DOM manipulation, and state management
-File Description Inventory
-HTML Files (*.html): Each file represents a specific screen in the application. They are styled via Tailwind CSS (via CDN) and feature a responsive layout with a desktop sidebar and a mobile bottom navigation bar. They include dark mode specific utility classes.
+├── index.html          # Головний дашборд та точка входу
+├── history.html        # Історія транзакцій та інтерфейс фільтрації
+├── limits.html         # Управління бюджетом та лімітами
+├── settings.html       # Налаштування застосунку та скидання даних
+├── statistics.html     # Візуалізація даних та графіки
+└── app.js              # Основна бізнес-логіка, маніпуляції з DOM та управління станом
+Опис Файлів
+HTML файли (*.html): Кожен файл представляє певний екран у застосунку. Вони стилізовані за допомогою Tailwind CSS (через CDN) і мають адаптивний макет з десктопною боковою панеллю та мобільною нижньою навігацією. Вони також включають специфічні утилітарні класи для темної теми.
 
-app.js: The central engine of the application. It handles:
+app.js: Центральний рушій застосунку. Він обробляє:
 
-Abstraction of the browser's localStorage API for data persistence.
+Роботу з API localStorage браузера для збереження даних.
 
-DOM manipulation and event listening for forms, buttons, and dynamic content rendering.
+Маніпуляції з DOM та обробку подій для форм, кнопок і динамічного рендерингу контенту.
 
-State management for transactions, savings goals, and budget limits.
+Управління станом для транзакцій, цілей накопичення та бюджетних лімітів.
 
-Triggering the Toast notification system for limit warnings and "Critic Mode" comments.
+Запуск системи сповіщень (Toast) для попереджень про ліміти та коментарів "Режиму Критика".
 
-Application of theme settings (Dark/Light mode) and currency formatting.
+Застосування налаштувань теми (Темний/Світлий режим) та форматування валюти.
 
-Technology Stack
+Стек Технологій
 Frontend: HTML5, Vanilla JavaScript (ES6+), CSS3
 
-Styling: Tailwind CSS (via CDN)
+Стилізація: Tailwind CSS (через CDN)
 
-Icons: FontAwesome 6
+Іконки: FontAwesome 6
 
-Data Storage: Browser LocalStorage API
+Зберігання даних: Browser LocalStorage API
 
-Fonts: Google Fonts (Inter)
+Шрифти: Google Fonts (Inter)
 
-Usage
-Because PayTrack is a purely frontend-driven application, there is no need for npm or complex build tools. To set up and run the application locally:
+Використання
+Оскільки PayTrack є виключно frontend-застосунком, немає потреби в npm або складних інструментах збірки. Щоб налаштувати та запустити застосунок локально:
 
-Clone the repository to your local machine:
+Склонуйте репозиторій на свій локальний комп'ютер:
 
 Bash
-   git clone <repository-url>
-Open the project folder.
+git clone <repository-url>
+Відкрийте папку проєкту.
 
-Launch the application:
+Запустіть застосунок:
 
-Option A: Simply double-click on index.html to open it in your default web browser.
+Варіант А: Просто двічі клацніть на index.html, щоб відкрити його у вашому браузері за замовчуванням.
 
-Option B: For a better development experience, use a local server extension like Live Server in VS Code. Right-click index.html and select "Open with Live Server".
+Варіант Б: Для кращого досвіду розробки використовуйте локальний сервер, наприклад розширення Live Server у VS Code. Натисніть правою кнопкою миші на index.html і виберіть "Open with Live Server".
