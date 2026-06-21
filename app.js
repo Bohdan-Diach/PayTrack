@@ -1,16 +1,40 @@
-// ================= БАЗА ДАНИХ ТА НАЛАШТУВАННЯ =================
+/**
+ * @fileoverview Головний файл логіки застосунку PayTrack.
+ * Керує транзакціями, статистикою (Chart.js), лімітами, цілями та "Режимом Критика".
+ * Всі дані зберігаються локально через Web Storage API (localStorage).
+ * 
+ * @author Дяченко Богдан
+ * @project PayTrack
+ */
+
+// БАЗА ДАНИХ ТА НАЛАШТУВАННЯ
+
+// Ініціалізація або завантаження даних користувача з localStorage
 let transactions = JSON.parse(localStorage.getItem('fb_bento_data')) || [];
 let userGoal = JSON.parse(localStorage.getItem('fb_goal_data')) || null;
 let userLimits = JSON.parse(localStorage.getItem('fb_limits_data')) || {};
-let userProfile = JSON.parse(localStorage.getItem('fb_user_profile')) || { name: 'Користувач', email: 'finance@buddy.ua', currency: '₴', theme: 'light', criticMode: false };
+let userProfile = JSON.parse(localStorage.getItem('fb_user_profile')) || { 
+    name: 'Користувач', 
+    email: 'finance@buddy.ua', 
+    currency: '₴', 
+    theme: 'light', 
+    criticMode: false 
+};
 
 const CURRENCY = userProfile.currency || '₴';
 let currentChart = null; 
 
+// Застосування темної теми при завантаженні, якщо вона обрана в налаштуваннях
 if (userProfile.theme === 'dark') document.documentElement.classList.add('dark');
 else document.documentElement.classList.remove('dark');
 
-// ================= КАТЕГОРІЇ =================
+// КАТЕГОРІЇ
+
+/**
+ * Конфігурація категорій для доходів та витрат.
+ * Містить назви, іконки FontAwesome, емодзі для графіків та кольорові схеми Tailwind.
+ * @constant {Object}
+ */
 const categoryConfig = {
     'income': { name: 'Дохід', icon: 'fa-arrow-down', emoji: '💰', color: 'text-emerald-500', bg: 'bg-emerald-100', type: 'income' },
     'salary': { name: 'Зарплата', icon: 'fa-wallet', emoji: '💵', color: 'text-emerald-500', bg: 'bg-emerald-100', type: 'income' },
@@ -26,19 +50,29 @@ const categoryConfig = {
     'other': { name: 'Інше', icon: 'fa-box', emoji: '📦', color: 'text-slate-500', bg: 'bg-slate-100', type: 'expense' }
 };
 
+// Реєстрація плагіна для відображення емодзі на графіку
 if (typeof Chart !== 'undefined') Chart.register(ChartDataLabels);
 
+/**
+ * Форматує числові значення у грошовий формат (наприклад, 10000 -> 10 000).
+ * @param {number} amount - Сума для форматування.
+ * @returns {string} Відформатована сума.
+ */
 function formatMoney(amount) { return Math.floor(amount).toLocaleString('uk-UA'); }
 
-// ================= МАРШРУТИЗАТОР =================
+// МАРШРУТИЗАТОР
+
+// Ініціалізація відповідних модулів залежно від поточної відкритої сторінки
 document.addEventListener('DOMContentLoaded', () => {
     updateSidebarProfile();
     updateMobileNavigation();
     updateDesktopNavigation();
     
+    // Динамічне підставлення валюти користувача в плейсхолдери інпутів
     const amountInputs = document.querySelectorAll('input[placeholder^="Сума"]');
     amountInputs.forEach(input => input.placeholder = `Сума (${CURRENCY})`);
 
+    // Перевірка наявності елементів на сторінці для запуску потрібних скриптів
     if (document.getElementById('transaction-form')) initDashboard();
     if (document.getElementById('analyticsChart')) initStatistics();
     if (document.getElementById('full-history-list')) initHistory();
@@ -46,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('profile-form')) initSettings();
 });
 
+/** Оновлює активний стан меню для десктопної версії (Sidebar). */
 function updateDesktopNavigation() {
     const page = window.location.pathname.split("/").pop() || "index.html"; 
     const desktopNav = document.querySelector('aside.sidebar nav');
@@ -56,6 +91,7 @@ function updateDesktopNavigation() {
     });
 }
 
+/** Оновлює активний стан меню для мобільної версії (Bottom Nav). */
 function updateMobileNavigation() {
     const page = window.location.pathname.split("/").pop() || "index.html"; 
     const mobileNav = document.querySelector('nav.fixed.bottom-0');
@@ -66,13 +102,21 @@ function updateMobileNavigation() {
     });
 }
 
+/** Встановлює ім'я користувача у боковому меню. */
 function updateSidebarProfile() {
     document.querySelectorAll('.sidebar .font-bold.text-sm').forEach(el => {
         if(el.textContent === 'Користувач' || el.textContent.includes('@') === false) el.textContent = userProfile.name;
     });
 }
 
-// ================= СПОВІЩЕННЯ ПРО ЛІМІТИ =================
+// СПОВІЩЕННЯ ПРО ЛІМІТИ
+
+/**
+ * Перевіряє, чи не перевищує нова транзакція встановлений ліміт для даної категорії.
+ * Якщо ліміт перевищено, викликає спливаюче повідомлення (Toast).
+ * 
+ * @param {string} category - ID категорії витрати (наприклад, 'products').
+ */
 function checkLimitsAndAlert(category) {
     if (!userLimits[category]) return;
 
@@ -92,9 +136,11 @@ function checkLimitsAndAlert(category) {
         if (toast && msg) {
             msg.innerHTML = `Ви перевищили встановлений ліміт на <strong>${conf.name}</strong> на <strong>${CURRENCY}${formatMoney(overspent)}</strong>.`;
             
+            // Анімація появи
             toast.classList.remove('-translate-y-40', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
             
+            // Автоматичне приховування через 4 секунди
             setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('-translate-y-40', 'opacity-0');
@@ -103,17 +149,28 @@ function checkLimitsAndAlert(category) {
     }
 }
 
-// ================= РЕЖИМ КРИТИКА 🌶️ =================
-let lastJoke = ""; 
+// РЕЖИМ КРИТИКА
 
+let lastJoke = ""; // Зберігає останній жарт, щоб уникнути повторень
+
+/**
+ * Генерує та відображає саркастичний коментар залежно від суми та категорії витрати.
+ * Є елементом гейміфікації для емоційного залучення користувача.
+ * 
+ * @param {number} amount - Сума витрати.
+ * @param {string} categoryId - Ключ категорії (наприклад, 'transport').
+ * @param {string} categoryName - Локалізована назва категорії.
+ */
 function showCriticReaction(amount, categoryId, categoryName) {
     let jokes = [];
 
+    // Пріоритетна реакція на масштабні витрати
     if (amount >= 3000) {
         jokes.push(`Ого, ${CURRENCY}${formatMoney(amount)} за раз?! Твоя мрія щойно віддалилася ще на рік.`);
         jokes.push(`З такими масштабними витратами тобі доведеться писати код цілодобово, щоб це відбити.`);
         jokes.push(`Мінус ${CURRENCY}${formatMoney(amount)}? Здається, твій бюджет щойно зробив сальто і помер.`);
     } 
+    // Реакції по конкретних категоріях
     else {
         switch(categoryId) {
             case 'products':
@@ -146,12 +203,14 @@ function showCriticReaction(amount, categoryId, categoryName) {
         }
     }
 
+    // Захист від двох однакових жартів підряд
     let availableJokes = jokes.filter(joke => joke !== lastJoke);
     if (availableJokes.length === 0) availableJokes = jokes; 
 
     const randomJoke = availableJokes[Math.floor(Math.random() * availableJokes.length)];
     lastJoke = randomJoke; 
 
+    // Вивід повідомлення у стилістиці "Критика" (червоний Toast)
     const toast = document.getElementById('limit-alert-toast');
     const msg = document.getElementById('limit-alert-message');
     
@@ -174,9 +233,14 @@ function showCriticReaction(amount, categoryId, categoryName) {
         }, 5500); 
     }
 }
-// ================= ГОЛОВНА =================
+
+// ГОЛОВНА (DASHBOARD)
+
+/** Ініціалізує слухачі подій для головної сторінки (додавання транзакцій, цілей). */
 function initDashboard() {
     updateDashboardUI();
+    
+    // Обробка форми нової транзакції
     document.getElementById('transaction-form').addEventListener('submit', function(e) {
         e.preventDefault();
         let name = document.getElementById('t-name').value;
@@ -188,53 +252,73 @@ function initDashboard() {
         
         const now = new Date();
         transactions.unshift({
-            id: Date.now(), name, amount, category, type,
+            id: Date.now(), 
+            name, 
+            amount, 
+            category, 
+            type,
             date: `${now.toLocaleDateString('uk-UA', { day: '2-digit', month: 'short' })} о ${now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}` 
         });
+        
         localStorage.setItem('fb_bento_data', JSON.stringify(transactions));
-        document.getElementById('t-name').value = ''; document.getElementById('t-amount').value = '';
+        document.getElementById('t-name').value = ''; 
+        document.getElementById('t-amount').value = '';
+        
         updateDashboardUI();
 
-if (type === 'expense') {
+        // Перевірка тригерів після додавання витрати
+        if (type === 'expense') {
             checkLimitsAndAlert(category);
             if (userProfile.criticMode) showCriticReaction(amount, category, categoryConfig[category].name);
         }
     });
 
+    // Обробка форми встановлення нової цілі (Мрії)
     if(document.getElementById('goal-modal-form')) {
         document.getElementById('goal-modal-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            userGoal = { name: document.getElementById('modal-g-name').value, amount: parseFloat(document.getElementById('modal-g-amount').value) };
+            userGoal = { 
+                name: document.getElementById('modal-g-name').value, 
+                amount: parseFloat(document.getElementById('modal-g-amount').value) 
+            };
             localStorage.setItem('fb_goal_data', JSON.stringify(userGoal));
+            
             document.getElementById('goal-modal-form').classList.add('hidden');
             document.getElementById('modal-motivation-text').textContent = "Чудова мета! З такою дисципліною все вийде 🚀";
             document.getElementById('modal-success').classList.remove('hidden');
+            
             updateDashboardUI();
+            
             setTimeout(() => {
                 closeGoalModal();
                 setTimeout(() => {
                     document.getElementById('goal-modal-form').classList.remove('hidden');
                     document.getElementById('modal-success').classList.add('hidden');
-                    document.getElementById('modal-g-name').value = ''; document.getElementById('modal-g-amount').value = '';
+                    document.getElementById('modal-g-name').value = ''; 
+                    document.getElementById('modal-g-amount').value = '';
                 }, 300);
             }, 3000);
         });
     }
 }
 
+// Управління модальним вікном цілі
 function openGoalModal() { const m = document.getElementById('goal-modal'); if(m) { m.classList.remove('hidden'); m.classList.add('flex'); } }
 function closeGoalModal() { const m = document.getElementById('goal-modal'); if(m) { m.classList.add('hidden'); m.classList.remove('flex'); } }
 
+/** Перераховує баланс, оновлює прогрес цілі та рендерить список останніх транзакцій. */
 function updateDashboardUI() {
     let income = 0; let expense = 0;
     const list = document.getElementById('transactions-list');
     if(list) list.innerHTML = '';
     
+    // Розрахунок загальних показників
     transactions.forEach(t => { 
         if (t.type === 'income') income += t.amount; 
         else expense += t.amount; 
     });
 
+    // Відображення 4-х останніх транзакцій
     if(list) {
         const recentTransactions = transactions.slice(0, 4);
         if (recentTransactions.length === 0) {
@@ -268,11 +352,13 @@ function updateDashboardUI() {
         }
     }
 
+    // Оновлення головного балансу
     const balance = income - expense;
     if(document.getElementById('total-balance')) {
         document.getElementById('total-balance').textContent = `${CURRENCY}${balance >= 0 ? formatMoney(balance) : '0'}`;
     }
     
+    // Оновлення кільця фінансового здоров'я (Ratio)
     const ring = document.getElementById('balance-ring');
     const percentText = document.getElementById('balance-percent');
     if (ring && percentText) {
@@ -281,10 +367,12 @@ function updateDashboardUI() {
         percentText.textContent = `${percent}%`;
     }
 
+    // Відображення прогресу "Мрії"
     const goalBox = document.getElementById('goal-ui-content');
     if (goalBox) {
-        if (!userGoal) goalBox.innerHTML = `<div class="text-center opacity-50 h-full flex flex-col items-center justify-center"><i class="fas fa-crosshairs text-3xl mb-2"></i><p class="text-sm font-medium">Ціль не встановлено</p></div>`;
-        else {
+        if (!userGoal) {
+            goalBox.innerHTML = `<div class="text-center opacity-50 h-full flex flex-col items-center justify-center"><i class="fas fa-crosshairs text-3xl mb-2"></i><p class="text-sm font-medium">Ціль не встановлено</p></div>`;
+        } else {
             const saved = balance > 0 ? balance : 0;
             let goalPercent = Math.min((saved / userGoal.amount) * 100, 100);
             const remaining = userGoal.amount - saved;
@@ -314,12 +402,13 @@ function updateDashboardUI() {
     }
 }
 
-// ================= СТАТИСТИКА =================
-let currentTimeFilter = 'all';
-let currentViewType = 'doughnut'; // 'doughnut' або 'bar'
+// СТАТИСТИКА ТА CHART.JS
 
+let currentTimeFilter = 'all';
+let currentViewType = 'doughnut'; // Доступні типи: 'doughnut' (Категорії) або 'bar' (Тренди)
+
+/** Ініціалізація перемикачів фільтрів та типів графіків на сторінці статистики. */
 function initStatistics() {
-    // 1. Кнопки часу (Тиждень, Місяць тощо)
     const timeButtons = document.querySelectorAll('.filter-btn');
     timeButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -331,7 +420,6 @@ function initStatistics() {
         });
     });
 
-    // 2. Кнопки типу графіка (Категорії / Тренди)
     const btnDoughnut = document.getElementById('btn-type-doughnut');
     const btnBar = document.getElementById('btn-type-bar');
 
@@ -356,6 +444,14 @@ function initStatistics() {
     renderChart();
 }
 
+/**
+ * Генерує HTML-код бейджа для відображення тренду (ріст/падіння) у відсотках.
+ * 
+ * @param {number} current - Значення за поточний період.
+ * @param {number} prev - Значення за попередній період.
+ * @param {boolean} isExpense - Прапорець, що вказує, чи це витрата (для витрат ріст - це червоний колір).
+ * @returns {string} HTML-розмітка індикатора.
+ */
 function getTrendHTML(current, prev, isExpense) {
     if (prev === 0) return ''; 
     const diff = current - prev;
@@ -365,17 +461,18 @@ function getTrendHTML(current, prev, isExpense) {
     let color = '';
     let icon = diff > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     
-    // Для витрат ріст - це погано (червоний). Для доходів/балансу - добре (зелений).
     if (isExpense) color = diff > 0 ? 'text-rose-500 bg-rose-100' : 'text-emerald-500 bg-emerald-100';
     else color = diff > 0 ? 'text-emerald-500 bg-emerald-100' : 'text-rose-500 bg-rose-100';
 
     return `<span class="text-[10px] font-bold ${color} ml-2 px-2 py-0.5 rounded-md"><i class="fas ${icon}"></i> ${percent}%</span>`;
 }
 
+/** Основна функція рендерингу графіка Chart.js та розрахунку аналітики за вибраний період. */
 function renderChart() {
     const now = Date.now();
     const DAY_IN_MS = 24 * 60 * 60 * 1000;
     
+    // Визначення тривалості вибраного періоду у мілісекундах
     let periodMs = 0;
     if (currentTimeFilter === 'day') periodMs = DAY_IN_MS;
     else if (currentTimeFilter === 'week') periodMs = DAY_IN_MS * 7;
@@ -385,6 +482,7 @@ function renderChart() {
     let filtered = transactions;
     let prevFiltered = [];
 
+    // Фільтрація масивів для поточного та минулого періоду (для порівняння трендів)
     if (periodMs > 0) {
         filtered = transactions.filter(t => (now - t.id) <= periodMs);
         prevFiltered = transactions.filter(t => (now - t.id) > periodMs && (now - t.id) <= periodMs * 2);
@@ -412,6 +510,7 @@ function renderChart() {
         else prevIncome += t.amount; 
     });
 
+    // Оновлення карток загальної статистики на сторінці
     if(document.getElementById('stat-period-income')) document.getElementById('stat-period-income').textContent = `+${CURRENCY}${formatMoney(totalIncome)}`;
     if(document.getElementById('trend-income')) document.getElementById('trend-income').innerHTML = getTrendHTML(totalIncome, prevIncome, false);
 
@@ -429,6 +528,7 @@ function renderChart() {
 
     if(document.getElementById('total-expense-stat')) document.getElementById('total-expense-stat').textContent = `${CURRENCY}${formatMoney(totalExpense)}`;
 
+    // Рендеринг списку деталізації категорій праворуч від графіка
     const catListEl = document.getElementById('category-details-list');
     if (catListEl) {
         catListEl.innerHTML = '';
@@ -455,10 +555,11 @@ function renderChart() {
         }
     }
 
+    // Малювання графіка (Chart.js)
     const chartEl = document.getElementById('analyticsChart');
     if (!chartEl) return;
     const ctx = chartEl.getContext('2d');
-    if (currentChart) currentChart.destroy();
+    if (currentChart) currentChart.destroy(); // Очищення попереднього інстансу перед новим рендером
 
     const categoryColors = { 'products': '#3b82f6', 'transport': '#f43f5e', 'utilities': '#f59e0b', 'clothing': '#ec4899', 'entertainment': '#a855f7', 'shopping': '#6366f1', 'other': '#64748b' };
 
@@ -478,11 +579,11 @@ function renderChart() {
                 layout: { padding: 10 }, 
                 responsive: true, 
                 maintainAspectRatio: false, 
-                cutout: '55%', 
+                cutout: '55%', // Товщина кільця адаптована під мобільні пристрої
                 plugins: {
                     legend: { 
                         display: data.length > 0, 
-                        position: 'bottom', 
+                        position: 'bottom', // Легенда знизу для кращого відображення на мобільних телефонах
                         labels: { color: 'rgba(255, 255, 255, 0.8)', font: { family: 'Inter', size: 14 }, padding: 16, usePointStyle: true, pointStyle: 'circle' } 
                     },
                     tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { size: 14, family: 'Inter' }, bodyFont: { size: 16, family: 'Inter', weight: 'bold' }, padding: 16, cornerRadius: 12, callbacks: { label: function(context) { return ` ${CURRENCY}${formatMoney(context.raw)}`; } } },
@@ -494,6 +595,7 @@ function renderChart() {
                         formatter: (value, context) => { 
                             if (totalExpense === 0) return null; 
                             const percent = Math.round((value / totalExpense) * 100); 
+                            // Приховуємо емодзі для дуже дрібних витрат (< 5%), щоб уникнути накладання іконок
                             if (percent < 5) return null; 
                             return emojis[context.dataIndex]; 
                         } 
@@ -529,7 +631,10 @@ function renderChart() {
         });
     }
 }
-// ================= ІСТОРІЯ =================
+
+// ІСТОРІЯ
+
+/** Ініціалізація сторінки історії: пошук, фільтрація та рендеринг списку транзакцій. */
 function initHistory() {
     const searchInput = document.getElementById('search-input');
     const typeButtons = document.querySelectorAll('.type-filter');
@@ -538,6 +643,7 @@ function initHistory() {
     function renderHistory() {
         const list = document.getElementById('full-history-list');
         if(!list) return; list.innerHTML = '';
+        
         let filtered = transactions.filter(t => {
             const matchType = currentTypeFilter === 'all' || t.type === currentTypeFilter;
             const matchSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) || categoryConfig[t.category].name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -562,7 +668,7 @@ function initHistory() {
                     </div>
                     <div class="flex items-center gap-6">
                         <div class="font-bold text-lg tracking-tight ${amountColor}">${sign}${CURRENCY}${formatMoney(t.amount)}</div>
-                        <button onclick="deleteTransaction(${t.id})" class="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"><i class="fas fa-trash text-sm"></i></button>
+                        <button onclick="deleteTransaction(${t.id})" class="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white" title="Видалити транзакцію"><i class="fas fa-trash text-sm"></i></button>
                     </div>
                 </div>`;
         });
@@ -573,15 +679,27 @@ function initHistory() {
         btn.addEventListener('click', (e) => {
             typeButtons.forEach(b => { b.classList.remove('bg-white', 'shadow-sm', 'text-slate-800', 'dark:text-slate-800', 'active'); b.classList.add('text-slate-400'); });
             e.target.classList.add('bg-white', 'shadow-sm', 'text-slate-800', 'dark:text-slate-800', 'active'); e.target.classList.remove('text-slate-400');
-            currentTypeFilter = e.target.getAttribute('data-type'); renderHistory();
+            currentTypeFilter = e.target.getAttribute('data-type'); 
+            renderHistory();
         });
     });
     renderHistory();
 }
 
-function deleteTransaction(id) { transactions = transactions.filter(t => t.id !== id); localStorage.setItem('fb_bento_data', JSON.stringify(transactions)); if(document.getElementById('full-history-list')) initHistory(); if(document.getElementById('transaction-form')) updateDashboardUI(); }
+/**
+ * Видаляє транзакцію за її унікальним ID.
+ * @param {number} id - Ідентифікатор транзакції.
+ */
+function deleteTransaction(id) { 
+    transactions = transactions.filter(t => t.id !== id); 
+    localStorage.setItem('fb_bento_data', JSON.stringify(transactions)); 
+    if(document.getElementById('full-history-list')) initHistory(); 
+    if(document.getElementById('transaction-form')) updateDashboardUI(); 
+}
 
-// ================= ЛІМІТИ =================
+// ЛІМІТИ
+
+/** Ініціалізація модуля фінансових лімітів. */
 function initLimits() {
     const form = document.getElementById('limit-form');
     if(form) {
@@ -589,12 +707,14 @@ function initLimits() {
             e.preventDefault();
             userLimits[document.getElementById('l-category').value] = parseFloat(document.getElementById('l-amount').value);
             localStorage.setItem('fb_limits_data', JSON.stringify(userLimits));
-            document.getElementById('l-amount').value = ''; renderLimits();
+            document.getElementById('l-amount').value = ''; 
+            renderLimits();
         });
     }
     renderLimits();
 }
 
+/** Рендерить список встановлених лімітів та їх поточне наповнення (прогрес-бари). */
 function renderLimits() {
     const list = document.getElementById('limits-list');
     if(!list) return; list.innerHTML = '';
@@ -610,6 +730,7 @@ function renderLimits() {
         const spentAmount = expensesByCat[cat] || 0;
         let percent = Math.min((spentAmount / limitAmount) * 100, 100);
 
+        // Динамічна зміна кольору прогрес-бару в залежності від рівня вичерпання ліміту
         let barColor = 'bg-emerald-500'; let textColor = 'text-emerald-500';
         if (percent > 75 && percent < 100) { barColor = 'bg-amber-400'; textColor = 'text-amber-500'; } 
         else if (percent >= 100) { barColor = 'bg-rose-500'; textColor = 'text-rose-500'; }
@@ -628,9 +749,17 @@ function renderLimits() {
             </div>`;
     });
 }
-function deleteLimit(category) { delete userLimits[category]; localStorage.setItem('fb_limits_data', JSON.stringify(userLimits)); renderLimits(); }
 
-// ================= НАЛАШТУВАННЯ =================
+/** Видаляє встановлений ліміт для категорії. */
+function deleteLimit(category) { 
+    delete userLimits[category]; 
+    localStorage.setItem('fb_limits_data', JSON.stringify(userLimits)); 
+    renderLimits(); 
+}
+
+// НАЛАШТУВАННЯ (ПРОФІЛЬ)
+
+/** Ініціалізація модулів сторінки профілю та збереження налаштувань. */
 function initSettings() {
     document.getElementById('user-name-input').value = userProfile.name;
     document.getElementById('user-email-input').value = userProfile.email;
@@ -661,10 +790,11 @@ function initSettings() {
             localStorage.setItem('fb_user_profile', JSON.stringify(userProfile));
             
             alert("Налаштування інтерфейсу оновлено!");
-            window.location.reload();
+            window.location.reload(); // Перезавантаження для застосування нової теми
         });
     }
 
+    // Повне скидання даних (Hard Reset)
     const clearBtn = document.getElementById('clear-data-btn');
     if(clearBtn) {
         clearBtn.addEventListener('click', () => {
